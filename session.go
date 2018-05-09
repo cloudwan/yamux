@@ -399,7 +399,7 @@ func (s *Session) send() {
 					if err != nil {
 						s.logger.Printf("[ERR] yamux: Failed to write header: %v", err)
 						asyncSendErr(ready.Err, err)
-						s.exitErr(err)
+						s.exitErr(fmt.Errorf("send write error: %s", err))
 						return
 					}
 					sent += n
@@ -412,7 +412,7 @@ func (s *Session) send() {
 				if err != nil {
 					s.logger.Printf("[ERR] yamux: Failed to write body: %v", err)
 					asyncSendErr(ready.Err, err)
-					s.exitErr(err)
+					s.exitErr(fmt.Errorf("send write body error: %s", err))
 					return
 				}
 			}
@@ -452,7 +452,7 @@ func (s *Session) recvLoop() error {
 			if err != io.EOF && !strings.Contains(err.Error(), "closed") && !strings.Contains(err.Error(), "reset by peer") {
 				s.logger.Printf("[ERR] yamux: Failed to read header: %v", err)
 			}
-			return err
+			return fmt.Errorf("recv read header error: %s", err)
 		}
 
 		// Verify the version
@@ -467,7 +467,7 @@ func (s *Session) recvLoop() error {
 		}
 
 		if err := handlers[mt](s, hdr); err != nil {
-			return err
+			return fmt.Errorf("recv handler error: %s", err)
 		}
 	}
 }
